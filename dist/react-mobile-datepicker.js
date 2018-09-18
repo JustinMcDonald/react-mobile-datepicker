@@ -617,10 +617,11 @@ var DatePickerItem = function (_Component) {
         value: function _updateDates(difference) {
             var typeName = this.typeName;
             var dates = this.state.dates;
+            var step = this.props.step;
 
             if (difference > 0) {
                 var shiftedItems = dates.slice(0, difference).map(function (date) {
-                    return TimeUtil['next' + typeName](date, this.props.step);
+                    return TimeUtil['next' + typeName](date, step);
                 });
                 this.currentIndex += difference;
                 this.setState({
@@ -629,7 +630,7 @@ var DatePickerItem = function (_Component) {
                 });
             } else if (difference < 0) {
                 var _shiftedItems = dates.slice(dates.length + difference, dates.length).map(function (date) {
-                    return TimeUtil['next' + typeName](date, this.props.step);
+                    return TimeUtil['next' + typeName](date, step);
                 });
                 this.currentIndex += difference;
                 this.setState({
@@ -676,7 +677,7 @@ var DatePickerItem = function (_Component) {
                 this._updateDates(-1);
             }
 
-            this._moveTo(this.refs.scroll, this.currentIndex);
+            this._moveTo(this.refs.scroll, this.currentIndex, direction);
         }
 
         /**
@@ -688,7 +689,7 @@ var DatePickerItem = function (_Component) {
 
     }, {
         key: '_moveTo',
-        value: function _moveTo(obj, currentIndex) {
+        value: function _moveTo(obj, currentIndex, direction) {
             var _this3 = this;
 
             this.animating = true;
