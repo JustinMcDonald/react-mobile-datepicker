@@ -621,7 +621,7 @@ var DatePickerItem = function (_Component) {
 
             if (difference > 0) {
                 var shiftedItems = dates.slice(0, difference).map(function (date) {
-                    return TimeUtil['next' + typeName](date, step);
+                    return TimeUtil['next' + typeName](date, step + (DATE_LENGTH - 1));
                 });
                 this.currentIndex += difference;
                 this.setState({
@@ -630,7 +630,7 @@ var DatePickerItem = function (_Component) {
                 });
             } else if (difference < 0) {
                 var _shiftedItems = dates.slice(dates.length + difference, dates.length).map(function (date) {
-                    return TimeUtil['next' + typeName](date, step);
+                    return TimeUtil['next' + typeName](date, -step + (DATE_LENGTH - 1));
                 });
                 this.currentIndex += difference;
                 this.setState({
