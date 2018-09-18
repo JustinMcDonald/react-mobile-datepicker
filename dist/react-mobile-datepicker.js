@@ -718,7 +718,7 @@ var DatePickerItem = function (_Component) {
 
             // NOTE: There is no transitionend, setTimeout is used instead.
             setTimeout(function () {
-                _this3._updateItemsAndMargin(additionalIndexesToTravel);
+                _this3._updateDates(additionalIndexesToTravel);
                 _this3.animating = false;
                 _this3.props.onSelect(_this3.state.dates[MIDDLE_INDEX]);
                 _this3._clearTransition(_this3.refs.scroll);
