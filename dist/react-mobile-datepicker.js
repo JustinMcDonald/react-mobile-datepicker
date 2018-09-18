@@ -630,7 +630,7 @@ var DatePickerItem = function (_Component) {
                 });
             } else if (difference < 0) {
                 var _shiftedItems = dates.slice(dates.length + difference, dates.length).map(function (date) {
-                    return TimeUtil['next' + typeName](date, -step + (DATE_LENGTH - 1));
+                    return TimeUtil['next' + typeName](date, -(step + (DATE_LENGTH - 1)));
                 });
                 this.currentIndex += difference;
                 this.setState({
