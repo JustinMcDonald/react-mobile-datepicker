@@ -460,10 +460,10 @@ var toConsumableArray = function (arr) {
 /**
  * @module Date组件
  */
-var DATE_LENGTH = 20; // 日期的个数
+var DATE_LENGTH = 16; // 日期的个数
 var MIDDLE_INDEX = Math.floor(DATE_LENGTH / 2); // 日期数组中间值的索引
 
-var MAX_ITEM_SPIN_COUNT = Math.min(DATE_LENGTH / 2, 7);
+var MAX_ITEM_SPIN_COUNT = Math.min(DATE_LENGTH / 2, 5);
 var FIXED_SPIN_ANIMATION_TIME = 400;
 
 var isUndefined = function isUndefined(val) {
