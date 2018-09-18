@@ -460,10 +460,11 @@ var toConsumableArray = function (arr) {
 /**
  * @module Date组件
  */
-var DATE_HEIGHT = 40; // 每个日期的高度
 var DATE_LENGTH = 10; // 日期的个数
 var MIDDLE_INDEX = Math.floor(DATE_LENGTH / 2); // 日期数组中间值的索引
-var MIDDLE_Y = -DATE_HEIGHT * MIDDLE_INDEX; // translateY值
+
+var MAX_ITEM_SPIN_COUNT = 7;
+var FIXED_SPIN_ANIMATION_TIME = 400;
 
 var isUndefined = function isUndefined(val) {
     return typeof val === 'undefined';
@@ -516,12 +517,17 @@ var DatePickerItem = function (_Component) {
         _this.animating = false; // 判断是否在transition过渡动画之中
         _this.touchY = 0; // 保存touchstart的pageY
         _this.translateY = 0; // 容器偏移的距离
+        _this.lastEventTime = Date.now();
+        _this.lastTouchY = 0;
+        _this.velocity = 0;
         _this.currentIndex = MIDDLE_INDEX; // 滑动中当前日期的索引
         _this.moveDateCount = 0; // 一次滑动移动了多少个时间
+        _this.itemHeight = props.itemHeight;
+        _this.middleY = -_this.itemHeight * MIDDLE_INDEX;
 
         _this.state = {
-            translateY: MIDDLE_Y,
-            marginTop: (_this.currentIndex - MIDDLE_INDEX) * DATE_HEIGHT
+            translateY: _this.middleY,
+            marginTop: (_this.currentIndex - MIDDLE_INDEX) * _this.itemHeight
         };
 
         // 设置时间选择器单元的类别
@@ -567,8 +573,8 @@ var DatePickerItem = function (_Component) {
             this._iniDates(nextProps.value);
             this.currentIndex = MIDDLE_INDEX;
             this.setState({
-                translateY: MIDDLE_Y,
-                marginTop: (this.currentIndex - MIDDLE_INDEX) * DATE_HEIGHT
+                translateY: this.middleY,
+                marginTop: (this.currentIndex - MIDDLE_INDEX) * this.itemHeight
             });
         }
 
@@ -608,28 +614,34 @@ var DatePickerItem = function (_Component) {
         }
     }, {
         key: '_updateDates',
-        value: function _updateDates(direction) {
+        value: function _updateDates(difference) {
             var typeName = this.typeName;
             var dates = this.state.dates;
 
-            if (direction === 1) {
-                this.currentIndex++;
-                this.setState({
-                    dates: [].concat(toConsumableArray(dates.slice(1)), [TimeUtil['next' + typeName](dates[dates.length - 1], this.props.step)]),
-                    marginTop: (this.currentIndex - MIDDLE_INDEX) * DATE_HEIGHT
+            if (difference > 0) {
+                var shiftedItems = dates.slice(0, difference).map(function (date) {
+                    return TimeUtil['next' + typeName](date, this.props.step);
                 });
-            } else {
-                this.currentIndex--;
+                this.currentIndex += difference;
                 this.setState({
-                    dates: [TimeUtil['next' + typeName](dates[0], -this.props.step)].concat(toConsumableArray(dates.slice(0, dates.length - 1))),
-                    marginTop: (this.currentIndex - MIDDLE_INDEX) * DATE_HEIGHT
+                    dates: dates.slice(difference).concat(shiftedItems),
+                    marginTop: (this.currentIndex - MIDDLE_INDEX) * this.itemHeight
+                });
+            } else if (difference < 0) {
+                var _shiftedItems = dates.slice(dates.length + difference, dates.length).map(function (date) {
+                    return TimeUtil['next' + typeName](date, this.props.step);
+                });
+                this.currentIndex += difference;
+                this.setState({
+                    dates: _shiftedItems.concat(dates.slice(0, dates.length + difference)),
+                    marginTop: (this.currentIndex - MIDDLE_INDEX) * this.itemHeight
                 });
             }
         }
     }, {
         key: '_checkIsUpdateDates',
         value: function _checkIsUpdateDates(direction, translateY) {
-            return direction === 1 ? this.currentIndex * DATE_HEIGHT + DATE_HEIGHT / 2 < -translateY : this.currentIndex * DATE_HEIGHT - DATE_HEIGHT / 2 > -translateY;
+            return direction === 1 ? this.currentIndex * this.itemHeight + this.itemHeight / 2 < -translateY : this.currentIndex * this.itemHeight - this.itemHeight / 2 > -translateY;
         }
 
         /**
@@ -681,18 +693,35 @@ var DatePickerItem = function (_Component) {
 
             this.animating = true;
 
-            addPrefixCss(obj, { transition: 'transform .2s ease-out' });
+            var accelerationRate = -(this.velocity / FIXED_SPIN_ANIMATION_TIME); // units per ms for decelleration
+
+            var unitsToTravel = 0;
+            for (var i = 0; i < FIXED_SPIN_ANIMATION_TIME; i++) {
+                unitsToTravel += this.velocity;
+                this.velocity += accelerationRate;
+            }
+
+            var absoluteUnitsToTravel = Math.abs(unitsToTravel);
+
+            var additionalIndexesToTravel = [-MAX_ITEM_SPIN_COUNT, Math.floor(absoluteUnitsToTravel / this.itemHeight) * direction, MAX_ITEM_SPIN_COUNT].sort(function (a, b) {
+                return a - b;
+            })[1];
+
+            var virtualCurrentIndex = additionalIndexesToTravel + currentIndex;
+
+            addPrefixCss(obj, { transition: 'transform ' + FIXED_SPIN_ANIMATION_TIME + 'ms ease-out' });
 
             this.setState({
-                translateY: -currentIndex * DATE_HEIGHT
+                translateY: -virtualCurrentIndex * this.itemHeight
             });
 
             // NOTE: There is no transitionend, setTimeout is used instead.
             setTimeout(function () {
+                _this3._updateItemsAndMargin(additionalIndexesToTravel);
                 _this3.animating = false;
                 _this3.props.onSelect(_this3.state.dates[MIDDLE_INDEX]);
                 _this3._clearTransition(_this3.refs.scroll);
-            }, 200);
+            }, FIXED_SPIN_ANIMATION_TIME);
         }
     }, {
         key: 'handleStart',
@@ -710,6 +739,14 @@ var DatePickerItem = function (_Component) {
             var dir = touchY - this.touchY;
             var translateY = this.translateY + dir;
             var direction = dir > 0 ? -1 : 1;
+
+            var diff = this.lastTouchY - touchY;
+            var now = Date.now();
+            var timeDiff = now - this.lastEventTime;
+            this.velocity = diff / timeDiff;
+
+            this.lastEventTime = Date.now();
+            this.lastTouchY = touchY;
 
             // 日期最小值，最大值限制
             var date = this.state.dates[MIDDLE_INDEX];
@@ -807,7 +844,12 @@ var DatePickerItem = function (_Component) {
                 'li',
                 {
                     key: index,
-                    className: className },
+                    className: className,
+                    style: {
+                        height: this.itemHeight,
+                        lineHeight: this.itemHeight + 'px'
+                    }
+                },
                 formatDate
             );
         }
@@ -830,10 +872,18 @@ var DatePickerItem = function (_Component) {
                         ref: function ref(viewport) {
                             return _this4.viewport = viewport;
                         } // eslint-disable-line
-                        , className: 'datepicker-viewport' },
+                        , className: 'datepicker-viewport',
+                        style: { height: this.itemHeight * 5 }
+                    },
                     React__default.createElement(
                         'div',
-                        { className: 'datepicker-wheel' },
+                        {
+                            className: 'datepicker-wheel',
+                            style: {
+                                height: this.itemHeight,
+                                marginTop: -(this.itemHeight / 2)
+                            }
+                        },
                         React__default.createElement(
                             'ul',
                             {
@@ -966,7 +1016,8 @@ var DatePicker = function (_Component) {
                 showFormat = _props2.showFormat,
                 showHeader = _props2.showHeader,
                 customHeader = _props2.customHeader,
-                dateSteps = _props2.dateSteps;
+                dateSteps = _props2.dateSteps,
+                itemHeight = _props2.itemHeight;
 
             var value = this.state.value;
             var themeClassName = ['default', 'dark', 'ios', 'android', 'android-dark', 'assurance'].indexOf(theme) === -1 ? 'default' : theme;
@@ -991,7 +1042,9 @@ var DatePicker = function (_Component) {
                             min: min,
                             max: max,
                             format: format,
-                            onSelect: _this2.handleDateSelect });
+                            onSelect: _this2.handleDateSelect,
+                            itemHeight: itemHeight
+                        });
                     })
                 ),
                 React__default.createElement(
@@ -1116,7 +1169,8 @@ ModalDatePicker.defaultProps = {
     confirmText: '完成',
     cancelText: '取消',
     onSelect: function onSelect() {},
-    onCancel: function onCancel() {}
+    onCancel: function onCancel() {},
+    itemHeight: 40
 };
 
 return ModalDatePicker;
