@@ -1,7 +1,6 @@
 # react-mobile-datepicker
 [![Travis][build-badge]][build] [![npm package][npm-badge]][npm] [![Coveralls][coveralls-badge]][coveralls]
 
-
 **a  lightweight react date picker for mobile, Not more than 4k**
 
 react-mobile-datepicker provides a component that can set year, month, day, hour, minute and second by sliding up or down.
@@ -151,6 +150,7 @@ ReactDOM.render(<App />, document.getElementById('react-box'));
 
 | Property        | Type           | Default  | Description |
 |:------------- |:------------- |:-------------- |:---------- |
+| itemHeight | Number | 40 | height (px) of each wheel item |
 | isPopup      | Boolean | true | whether  as popup add a overlay |
 | isOpen      | Boolean | false | whether to open datepicker |
 | theme      | String      | default  | theme of datepicker, include 'default', 'dark', 'ios', 'android', 'android-dark' |
@@ -166,17 +166,10 @@ ReactDOM.render(<App />, document.getElementById('react-box'));
 | cancelText | String | 取消 | customize the cancel button text |
 | onSelect | Function | () => {} | the callback function after click button of done, Date object as a parameter |
 | onCancel | Function | () => {} | the callback function after click button of cancel |
+| onChange | Function | (date) => {} | callback for date change events |
 
 ## Changelog
 * [Changelog](CHANGELOG.md)
-
-## How to Contribute
-
-Anyone and everyone is welcome to contribute to this project. The best way to
-start is by checking our [open issues](https://github.com/lanjingling0510/react-mobile-datepicker/issues),
-[submit a new issues](https://github.com/lanjingling0510/react-mobile-datepicker/issues/new?labels=bug) or
-[feature request](https://github.com/lanjingling0510/react-mobile-datepicker/issues/new?labels=enhancement),
-participate in discussions, upvote or downvote the issues you like or dislike.
 
 
 
