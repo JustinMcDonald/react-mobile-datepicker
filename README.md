@@ -82,11 +82,13 @@ const monthMap = {
 
 ## Getting Started
 
+### Build
+
+`npm run-script build`
+
 ### Install
 
-Using [npm](https://www.npmjs.com/):
-
-	$ npm install react-mobile-datepicker --save
+Repository currently includes `dist` files, add directly with `yarn add https://<repository>/JustinMcDonald/react-mobile-datepicker`.
 
 ### Import what you need
 The following guide assumes you have some sort of ES2015 build set up using babel and/or webpack/browserify/gulp/grunt/etc.
